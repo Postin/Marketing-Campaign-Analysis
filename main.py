@@ -126,7 +126,7 @@ plt.scatter(features[:, 0], features[:, 1], c=labels_gmm, cmap='viridis')
 
 dbscan = DBSCAN(eps=0.5).fit(features)
 plt.scatter(features[:, 0], features[:, 1], c=dbscan.labels_, cmap='viridis')
-plt.show()
+#plt.show()
 
 #evaluacija algoritama klasterovanja
 print('kmeans: {}'.format(silhouette_score(features, kmeanModel.labels_,
@@ -139,6 +139,7 @@ print('DBSCAN: {}'.format(silhouette_score(features, dbscan.labels_,
                                            metric='cosine')))
 #Interpretacija klastera
 scaled_df['Cluster'] = labels_gmm
+df['Cluster'] = labels_gmm
 
 #Vizualizacija klastera
 fig = plt.figure(figsize=(6,6))
@@ -154,5 +155,24 @@ ax.set_ylabel("Spending")
 ax.set_zlabel("Seniority")
 
 ax.scatter(xs=x,ys=y,zs=z,c=c)
-plt.show()
+#plt.show()
 
+df_mean = (df.groupby('Cluster').mean())
+print(df_mean[['Income','Spending','Seniority']])
+
+df_mean['Count'] = df['Cluster'].value_counts()
+df_mean['Percent'] = (df_mean['Count'] / df_mean['Count'].sum())*100
+print(df_mean)
+
+def cluster_func(x):
+    if x == 0:
+        return 'Stars'
+    elif x == 1:
+        return 'Need attention'
+    elif x == 2:
+        return 'High potential'
+    elif x == 3:
+        return 'Leaky bucket'
+
+df['Cluster'] = df['Cluster'].apply(cluster_func)
+print(df['Cluster'])
