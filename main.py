@@ -1,4 +1,5 @@
 import pandas as pd
+pd.options.mode.chained_assignment = None
 import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
@@ -10,6 +11,7 @@ from sklearn.cluster import KMeans,DBSCAN
 from sklearn.mixture import GaussianMixture
 from scipy.spatial.distance import cdist
 from sklearn.metrics import silhouette_score
+from mlxtend.frequent_patterns import apriori, association_rules
 
 
 df = pd.read_csv('data/marketing_campaign.csv',sep =';')
@@ -88,7 +90,6 @@ features = scaled_df[col_names]
 scaler = scaler.fit(features.values)
 features = scaler.transform(features.values)
 scaled_df[col_names] = features
-print(scaled_df.head())
 
 #Normalization
 transformer = Normalizer()
@@ -158,11 +159,9 @@ ax.scatter(xs=x,ys=y,zs=z,c=c)
 #plt.show()
 
 df_mean = (df.groupby('Cluster').mean())
-print(df_mean[['Income','Spending','Seniority']])
 
 df_mean['Count'] = df['Cluster'].value_counts()
 df_mean['Percent'] = (df_mean['Count'] / df_mean['Count'].sum())*100
-print(df_mean)
 
 def cluster_func(x):
     if x == 0:
@@ -174,5 +173,103 @@ def cluster_func(x):
     elif x == 3:
         return 'Leaky bucket'
 
+
 df['Cluster'] = df['Cluster'].apply(cluster_func)
-print(df['Cluster'])
+
+#More feature engineering
+q1,q3 = df['MntWines'].quantile([0.25,0.75])
+def bin_func(x):
+    if x == 0:
+        return "Non consumer"
+
+    if x <= q1:
+        return "Low consumer"
+    elif q1 < x <= q3:
+        return "Frequent consumer"
+    else:
+        return "Biggest consumer"
+
+df_bin = df[['Education','Marital_Status','HasChild','Cluster']]
+df_bin['WineGroup'] = df['MntWines'].apply(bin_func)
+#df.drop(['MntWines'],axis=1,inplace=True)
+
+q1, q3 = df['MntFruits'].quantile([0.25,0.75])
+df_bin['FruitGroup'] = df['MntFruits'].apply(bin_func)
+#df.drop(['MntFruits'],axis=1,inplace=True)
+
+q1, q3 = df['MntMeatProducts'].quantile([0.25,0.75])
+df_bin['MeatGroup'] = df['MntMeatProducts'].apply(bin_func)
+#df.drop(['MntMeatProducts'],axis=1,inplace=True)
+
+q1, q3 = df['MntFishProducts'].quantile([0.25,0.75])
+df_bin['FishGroup'] = df['MntFishProducts'].apply(bin_func)
+#df.drop(['MntFishProducts'],axis=1,inplace=True)
+
+q1, q3 = df['MntSweetProducts'].quantile([0.25,0.75])
+df_bin['SweetGroup'] = df['MntSweetProducts'].apply(bin_func)
+#df.drop(['MntSweetProducts'],axis=1,inplace=True)
+
+q1, q3 = df['MntGoldProds'].quantile([0.25,0.75])
+df_bin['GoldGroup'] = df['MntGoldProds'].apply(bin_func)
+#df.drop(['MntGoldProds'],axis=1,inplace=True)
+
+def bin_senior_func(x):
+
+    if x <= q1:
+        return "New customer"
+    elif q1 < x <= q3:
+        return "Experienced customer"
+    else:
+        return "Old customer"
+
+q1, q3 = df['Seniority'].quantile([0.25,0.75])
+print("OLD: ",q1)
+df_bin['SeniorityGroup'] = df['Seniority'].apply(bin_senior_func)
+#df.drop(['Seniority'],axis=1,inplace=True)
+
+def bin_income_func(x):
+    if x <= q1:
+        return "Low income"
+    elif q1 < x <= q2:
+        return "Low to medium income"
+    elif q2 < x <= q3:
+        return "Medium to high income"
+    elif x > q3:
+        return "High income"
+
+q1,q2,q3 = df['Income'].quantile([0.25,0.5,0.75])
+df_bin['IncomeGroup'] = df['Income'].apply(bin_income_func)
+#df.drop(['Income'],axis=1,inplace=True)
+
+def bin_age_func(x):
+    if x <= 18:
+        return "Youth"
+    elif 18 < x <= 35:
+        return "Young adult"
+    elif 35 < x <= 65:
+        return "Adult"
+    else:
+        return "Senior"
+
+
+df_bin['AgeGroup'] = df['Age'].apply(bin_age_func)
+
+df_assoc = pd.get_dummies(df_bin)
+
+#Apriori min support
+min_support = 0.08
+
+#Max lenght of apriori n-grams
+max_len = 10
+
+frequent_items = apriori(df_assoc, use_colnames=True, min_support=min_support, max_len=max_len + 1)
+rules = association_rules(frequent_items, metric='lift', min_threshold=1)
+# We select the product and the segment we want to analyze
+product='WineGroup'
+segment='Biggest consumer'
+target = product + "_" + segment
+
+results_personnal_care = rules[rules['consequents'].astype(str).str.contains(target, na=False)].sort_values(by='confidence', ascending=False)
+pd.set_option('display.max_columns', None)
+
+print(results_personnal_care.head(5))
