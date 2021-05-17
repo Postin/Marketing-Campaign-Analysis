@@ -12,7 +12,8 @@ from sklearn.mixture import GaussianMixture
 from scipy.spatial.distance import cdist
 from sklearn.metrics import silhouette_score
 from mlxtend.frequent_patterns import apriori, association_rules
-
+from sklearn.model_selection import train_test_split
+from lazypredict.Supervised import LazyClassifier
 
 df = pd.read_csv('data/marketing_campaign.csv',sep =';')
 #print(df.info())
@@ -53,8 +54,7 @@ df['Spending'] = df['MntFishProducts'] + df['MntMeatProducts'] + df['MntFruits']
                  + df['MntSweetProducts'] + df['MntWines'] + df['MntGoldProds']
 
 
-df.drop(['AcceptedCmp1','AcceptedCmp2','AcceptedCmp3','AcceptedCmp4','AcceptedCmp5'
-            ,'Response','Complain', 'Z_CostContact', 'Z_Revenue'], axis=1, inplace=True)
+df.drop(['ID','Z_CostContact', 'Z_Revenue'], axis=1, inplace=True)
 
 
 
@@ -223,7 +223,6 @@ def bin_senior_func(x):
         return "Old customer"
 
 q1, q3 = df['Seniority'].quantile([0.25,0.75])
-print("OLD: ",q1)
 df_bin['SeniorityGroup'] = df['Seniority'].apply(bin_senior_func)
 #df.drop(['Seniority'],axis=1,inplace=True)
 
@@ -272,4 +271,24 @@ target = product + "_" + segment
 results_personnal_care = rules[rules['consequents'].astype(str).str.contains(target, na=False)].sort_values(by='confidence', ascending=False)
 pd.set_option('display.max_columns', None)
 
-print(results_personnal_care.head(5))
+df.drop(['Education','Dt_Customer'],axis=1,inplace=True)
+
+f,  ax2 = plt.subplots(1, 1, figsize=(20, 10))
+corr = df.corr()
+sns.heatmap(corr,cmap='coolwarm_r', annot_kws={'size':30}, ax=ax2)
+ax2.set_title('DF Correlation Matrix', fontsize=12)
+#plt.show()
+
+
+df = pd.get_dummies(df, columns=['Marital_Status','HasChild','Cluster'])
+
+X = df.drop('Response',axis=1)
+y = df['Response']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+clf = LazyClassifier(verbose=0,ignore_warnings=True, custom_metric=None)
+models,predictions = clf.fit(X_train, X_test, y_train, y_test)
+
+print(predictions)
+
+
