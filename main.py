@@ -14,6 +14,7 @@ from sklearn.metrics import silhouette_score
 from mlxtend.frequent_patterns import apriori, association_rules
 from sklearn.model_selection import train_test_split
 from lazypredict.Supervised import LazyClassifier
+from imblearn.over_sampling import SMOTE
 
 df = pd.read_csv('data/marketing_campaign.csv',sep =';')
 #print(df.info())
@@ -284,11 +285,11 @@ df = pd.get_dummies(df, columns=['Marital_Status','HasChild','Cluster'])
 
 X = df.drop('Response',axis=1)
 y = df['Response']
+#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Always split into test and train sets BEFORE trying oversampling techniques!
+# Oversampling before splitting the data can allow the exact same observations to be present in both the test and train sets.
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-clf = LazyClassifier(verbose=0,ignore_warnings=True, custom_metric=None)
-models,predictions = clf.fit(X_train, X_test, y_train, y_test)
-
-print(predictions)
-
-
+# transform the dataset
+sm = SMOTE(random_state=42)
+X_sm, y_sm = sm.fit_resample(X_train,y_train)
