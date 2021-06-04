@@ -16,6 +16,8 @@ from sklearn.model_selection import train_test_split
 from lazypredict.Supervised import LazyClassifier
 from imblearn.over_sampling import SMOTE
 
+import keras
+
 df = pd.read_csv('data/marketing_campaign.csv',sep =';')
 #print(df.info())
 
