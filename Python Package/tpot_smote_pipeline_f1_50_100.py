@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import make_pipeline, make_union
+from tpot.builtins import StackingEstimator
 from tpot.export_utils import set_param_recursive
 
 # NOTE: Make sure that the outcome column is labeled 'target' in the data file
@@ -12,10 +13,10 @@ features = tpot_data.drop('target', axis=1)
 training_features, testing_features, training_target, testing_target = \
             train_test_split(features, tpot_data['target'], random_state=42)
 
-# Average CV score on the training set was: 0.9562400146892805
+# Average CV score on the training set was: 0.9831710926125055
 exported_pipeline = make_pipeline(
-    MinMaxScaler(),
-    RandomForestClassifier(bootstrap=True, criterion="gini", max_features=0.2, min_samples_leaf=8, min_samples_split=4, n_estimators=100)
+    StackingEstimator(estimator=GradientBoostingClassifier(learning_rate=0.1, max_depth=6, max_features=1.0, min_samples_leaf=13, min_samples_split=4, n_estimators=100, subsample=0.9000000000000001)),
+    KNeighborsClassifier(n_neighbors=3, p=1, weights="uniform")
 )
 # Fix random state for all the steps in exported pipeline
 set_param_recursive(exported_pipeline.steps, 'random_state', 42)
