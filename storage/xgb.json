@@ -1,0 +1,7 @@
+{
+  "learning_rate": 0.02,
+  "max_depth": 4,
+  "scale_pos_weight": 8,
+  "verbosity": 0,
+  "n_estimators": 70
+}

@@ -1,9 +1,10 @@
 from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
 import loras
 import numpy as np
 import pandas as pd
 
-from constants import num_features, TARGET
+from constants import num_features, TARGET, seed
 
 
 def loras_oversampling(original_Xtrain, original_ytrain):
@@ -51,6 +52,12 @@ def loras_oversampling(original_Xtrain, original_ytrain):
 def smote_oversampling(X, y, strategy=None):
     if strategy is None:
         strategy = {0: 5000, 1: 5000}
-    sm = SMOTE(random_state=42, sampling_strategy=strategy)
+    sm = SMOTE(random_state=seed, sampling_strategy=strategy)
     X_sm, y_sm = sm.fit_resample(X, y)
     return X_sm, y_sm
+
+
+def random_undersampling(X, y, strategy=None):
+    rus = RandomUnderSampler(random_state=seed)
+    X_res, y_res = rus.fit_resample(X, y)
+    return X_res, y_res

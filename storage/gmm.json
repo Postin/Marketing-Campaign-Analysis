@@ -1,0 +1,5 @@
+{
+  "n_components": 4,
+  "covariance_type":"spherical",
+  "max_iter":2000
+}
