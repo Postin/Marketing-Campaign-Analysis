@@ -1,0 +1,7 @@
+data_sampling: 'smote' # options are 'loras', 'rus', 'ros' and 'smote'
+use_tpot: False
+tpot_generations: 5
+tpot_population: 50
+model_name: 'xgb' # options are 'catboost', 'rf', 'nn' abd 'xgb'
+grid_search: False
+cv: False

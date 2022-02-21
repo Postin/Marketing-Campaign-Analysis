@@ -1,0 +1,6 @@
+{
+  "learning_rate": 0.01,
+  "od_type": "Iter",
+  "iterations": 3000,
+  "eval_metric": "F1"
+}
